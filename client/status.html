@@ -1,0 +1,119 @@
+
+<template name="statusPanel">
+    <div class="contenair-fluid">
+        <div class="row">
+    		<div class="col-md-4">
+    			<div class="panel panel-default">
+          			<div class="panel-heading">
+            			<h4 class="ui header">Client Status</h4>
+            		</div>
+    		  		<div class="panel-body">
+    					{{> liveStatus}}
+         			</div>
+    			</div>
+    		</div>
+    		<div class="col-md-8">
+    			<div class="panel panel-default">
+          			<div class="panel-heading">
+            			<h4 class="ui header">Toutes les connections sur le serveur</h4>
+            		</div>
+    				{{> serverStatus}}
+    			</div>
+    		</div>
+        </div>
+	</div>
+</template>
+
+<template name="liveStatus">
+
+    <button class="btn btn-success resync">Resync Time</button>
+
+    <dl class="dl-horizontal">
+        <dt>Server Time:</dt><dd>{{serverTime}}</dd>
+        <dt>Local Offset:</dt><dd>{{serverOffset}} ms</dd>
+        <dt>RTT:</dt><dd>{{serverRTT}} ms</dd>
+        <dt>Idle:</dt><dd>{{isIdleText}}</dd>
+        <dt>Monitor on:</dt><dd>{{isMonitoringText}}</dd>
+        <dt>Last Activity:</dt><dd>{{lastActivity}}</dd>
+    </dl>
+
+    {{#if isMonitoring}}
+    <h4>Idle monitoring is on.</h4>
+    <button class="btn btn-danger stop-monitor">Stop Monitor</button>
+    {{else}}
+    <form class="start-monitor">
+        <legend>Start monitor with the following parameters:</legend>
+        <label>Idle Threshold:</label>
+        <input class="form-control" name="threshold" type="number" min="5000" step="1" value="30000" required>
+        <label>Monitor Interval:</label>
+        <input class="form-control" name="interval" type="number" min="1000" step="1" value="1000" required>
+        <label>Idle on window blur:</label>
+        <select class="form-control" name="idleOnBlur" required>
+            <option value="true" selected>true</option>
+            <option value="false">false</option>
+        </select>
+        <button type="submit" class="btn btn-primary pull-right">Start Monitor</button>
+    </form>
+    {{/if}}
+</template>
+
+<template name="userPill">
+    <span class="label {{labelClass}}">{{username}}</span>
+</template>
+
+<template name="serverStatus">
+    <table class="table table-condensed table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Username/Connection</th>
+                <th>Idle</th>
+                <th>Last Activity</th>
+                <th>IP (<i>Last</i>)</th>
+                <th style="width: 256px">User Agent (<i>Last</i>)</th>
+            </tr>
+        </thead>
+        <tbody>
+        {{#each anonymous}}
+        {{> serverConnection}}
+        {{/each}}
+        {{#each users}}
+            <tr class="bold {{userClass}}">
+                <td>{{username}}<br>(last login {{localeTime status.lastLogin.date}})</td>
+                <td>{{> userPill}}</td>
+                <td>{{#with status.lastActivity}}
+                        {{> relTime}}
+                    {{else}}
+                        (active or not monitoring)
+                    {{/with}}
+                </td>
+                <td><i>{{status.lastLogin.ipAddr}}</i></td>
+                <td><i>{{status.lastLogin.userAgent}}</i></td>
+            </tr>
+            {{#each connections}}
+            {{> serverConnection}}
+            {{/each}}
+        {{/each}}
+        </tbody>
+    </table>
+</template>
+
+<template name="serverConnection">
+    <tr class="{{connectionClass}}">
+        <td>{{_id}}{{#with loginTime}}<br>(login {{this}}){{/with}}</td>
+        <td>{{idle}}</td>
+        <td>{{#with lastActivity}}
+            {{> relTime}}
+            {{else}}
+            (active or not monitoring)
+            {{/with}}
+        </td>
+        <td>{{ipAddr}}</td>
+        <td>{{userAgent}}</td>
+    </tr>
+</template>
+
+<template name="relTime">
+    {{localeTime this}}
+    <br>
+    ({{relativeTime this}})
+</template>
